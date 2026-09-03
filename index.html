@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GigShield — AI Financial Resilience</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--teal:#0d9488;--teal-dark:#0f766e;--teal-light:#ccfbf1;--blue:#0ea5e9;--gradient:linear-gradient(135deg,#0f766e,#0ea5e9);--white:#fff;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g400:#94a3b8;--g500:#64748b;--g600:#475569;--g700:#334155;--g800:#1e293b;--g900:#0f172a;--red:#ef4444;--orange:#f97316;--green:#10b981;--yellow:#eab308;--purple:#8b5cf6;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.1);--radius:16px;--radius-sm:10px;--sidebar-w:250px;--topbar-h:60px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+/* Sidebar */
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--white);border-right:1px solid var(--g200);z-index:100;display:flex;flex-direction:column;transition:transform .3s}
+.sidebar-header{padding:18px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--g100)}
+.sidebar-logo{width:38px;height:38px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.sidebar-brand{font-size:18px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-nav{flex:1;padding:10px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-sm);color:var(--g600);font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:2px;transition:all .2s}
+.nav-item:hover{background:var(--g100);color:var(--g800)}
+.nav-item.active{background:linear-gradient(135deg,rgba(13,148,136,.1),rgba(14,165,233,.1));color:var(--teal);font-weight:600}
+.nav-item i{width:18px;text-align:center;font-size:15px}
+.nav-section{padding:10px 14px 4px;font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.5px}
+.sidebar-footer{padding:14px;border-top:1px solid var(--g100)}
+.user-badge{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-sm);background:var(--g50)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
+.user-name{font-size:12.5px;font-weight:600}.user-role{font-size:10.5px;color:var(--g500)}
+
+/* Main */
+.main{margin-left:var(--sidebar-w);min-height:100vh}
+.topbar{height:var(--topbar-h);background:var(--white);border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
+.menu-toggle{display:none;background:none;border:none;font-size:20px;color:var(--g700);cursor:pointer;padding:6px}
+.page-title{font-size:17px;font-weight:700}
+.content{padding:24px 28px 40px}
+
+/* Tab sections */
+.tab-section{display:none}
+.tab-section.active{display:block}
+
+/* Cards & Grids */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:transform .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:14px}
+.stat-icon.teal{background:rgba(13,148,136,.1);color:var(--teal)}.stat-icon.blue{background:rgba(14,165,233,.1);color:var(--blue)}.stat-icon.green{background:rgba(16,185,129,.1);color:var(--green)}.stat-icon.orange{background:rgba(249,115,22,.1);color:var(--orange)}
+.stat-label{font-size:12px;color:var(--g500);font-weight:500;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:800;color:var(--g900)}
+.stat-change{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;margin-top:6px;padding:2px 8px;border-radius:20px}
+.stat-change.up{color:var(--green);background:rgba(16,185,129,.1)}
+.stat-change.down{color:var(--red);background:rgba(239,68,68,.1)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.card{background:var(--white);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700}
+.card-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--teal-light);color:var(--teal)}
+.chart-box{position:relative;height:260px}
+
+/* Transactions */
+.txn-list{list-style:none}
+.txn-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100)}
+.txn-item:last-child{border:none}
+.txn-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.txn-icon.inc{background:rgba(16,185,129,.1);color:var(--green)}.txn-icon.exp{background:rgba(239,68,68,.1);color:var(--red)}
+.txn-info{flex:1}.txn-name{font-size:13px;font-weight:600}.txn-date{font-size:11px;color:var(--g400)}
+.txn-amount{font-size:13px;font-weight:700}.txn-amount.pos{color:var(--green)}.txn-amount.neg{color:var(--red)}
+
+/* Tip Banner */
+.tip-banner{background:var(--gradient);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;gap:16px;color:#fff;box-shadow:0 4px 20px rgba(13,148,136,.25);margin-bottom:24px}
+.tip-banner .tip-icon{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px}
+.tip-banner h4{font-size:13px;font-weight:700;margin-bottom:2px;opacity:.9}
+.tip-banner p{font-size:13px;opacity:.95;line-height:1.4}
+
+/* Savings Bar */
+.sav-track{height:22px;background:var(--g100);border-radius:12px;overflow:hidden}
+.sav-fill{height:100%;background:var(--gradient);border-radius:12px;transition:width 1.5s}
+.sav-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--g500)}
+.sav-meta strong{color:var(--g800)}
+
+/* Auto-save card */
+.auto-save-card{background:var(--gradient);border-radius:var(--radius);padding:24px;color:#fff;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;box-shadow:0 4px 20px rgba(13,148,136,.25)}
+.auto-save-card h3{font-size:16px;font-weight:700;margin-bottom:2px}
+.auto-save-card p{font-size:13px;opacity:.85}
+.toggle{position:relative;width:54px;height:28px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle span{position:absolute;inset:0;background:rgba(255,255,255,.3);border-radius:14px;transition:.3s}
+.toggle span::before{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+span{background:rgba(255,255,255,.6)}
+.toggle input:checked+span::before{transform:translateX(26px)}
+
+/* Gauge */
+.gauge-wrap{position:relative;width:240px;height:140px;margin:0 auto 16px;overflow:hidden}
+.gauge-bg{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:240px;height:120px;border-radius:120px 120px 0 0;background:conic-gradient(from 180deg at 50% 100%,#ef4444 0deg,#f97316 36deg,#eab308 72deg,#10b981 108deg,#0d9488 144deg,#0ea5e9 180deg);opacity:.15}
+.gauge-needle{position:absolute;bottom:0;left:50%;width:3px;height:100px;background:var(--g800);border-radius:2px;transform-origin:bottom center;transition:transform 1.5s cubic-bezier(.4,0,.2,1)}
+.gauge-center{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:var(--g800);border:3px solid var(--white)}
+.gauge-labels{display:flex;justify-content:space-between;width:240px;margin:0 auto;font-size:11px;font-weight:600;color:var(--g400)}
+.score-number{font-size:56px;font-weight:900;text-align:center;margin:16px 0 4px}
+.score-label{font-size:15px;font-weight:600;text-align:center}
+
+/* Factor bars */
+.factor-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--g100)}
+.factor-item:last-child{border:none}
+.factor-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.factor-info{flex:1}.factor-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.factor-bar{height:7px;background:var(--g100);border-radius:4px;overflow:hidden}
+.factor-bar-fill{height:100%;border-radius:4px;transition:width 1.5s}
+.factor-score{font-size:13px;font-weight:700;min-width:36px;text-align:right}
+
+/* Simulator */
+.sim-group{margin-bottom:20px}
+.sim-label{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px}
+.sim-val{color:var(--teal);font-weight:700}
+input[type=range]{-webkit-appearance:none;width:100%;height:7px;background:var(--g100);border-radius:4px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--gradient);cursor:pointer}
+.sim-result{text-align:center;padding:20px;background:linear-gradient(135deg,rgba(13,148,136,.05),rgba(14,165,233,.05));border-radius:var(--radius-sm);margin-top:8px}
+.sim-preview{font-size:42px;font-weight:900;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sim-delta{font-size:14px;font-weight:700;color:var(--green);margin-top:4px}
+
+/* Coach */
+.chat-area{max-height:400px;overflow-y:auto;padding:10px 0}
+.chat-msg{display:flex;gap:10px;margin-bottom:16px}
+.chat-avatar{width:34px;height:34px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
+.chat-bubble{background:var(--g50);border-radius:14px;padding:12px 16px;font-size:13px;line-height:1.5;max-width:80%;color:var(--g700)}
+.chat-bubble.bot{background:linear-gradient(135deg,rgba(13,148,136,.08),rgba(14,165,233,.08));border:1px solid rgba(13,148,136,.12)}
+.quick-replies{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.quick-btn{padding:8px 16px;border:1.5px solid var(--teal);border-radius:20px;font-size:12px;font-weight:600;color:var(--teal);background:var(--white);cursor:pointer;transition:all .2s}
+.quick-btn:hover{background:var(--teal);color:var(--white)}
+.insight-card{padding:14px;background:var(--g50);border-radius:var(--radius-sm);margin-bottom:10px;display:flex;gap:12px;align-items:start}
+.insight-card i{color:var(--teal);font-size:18px;margin-top:2px}
+.insight-card p{font-size:13px;color:var(--g700);line-height:1.5}
+.insight-card strong{color:var(--g800)}
+.goal-bar-track{height:20px;background:var(--g100);border-radius:10px;overflow:hidden;margin:10px 0}
+.goal-bar-fill{height:100%;background:var(--gradient);border-radius:10px}
+
+/* Summary strip */
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.summary-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);text-align:center}
+.sc-icon{width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+.sc-val{font-size:22px;font-weight:800;color:var(--g900)}.sc-label{font-size:11px;color:var(--g500);margin-top:4px}
+
+/* Login */
+.login-wrap{min-height:100vh;background:var(--gradient);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--white);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;box-shadow:var(--shadow-lg)}
+.login-card h1{font-size:28px;font-weight:800;text-align:center;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.login-card .sub{text-align:center;color:var(--g500);font-size:13px;margin-bottom:28px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--g700);margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:12px 14px;border:1.5px solid var(--g200);border-radius:var(--radius-sm);font-size:14px;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--teal)}
+.btn{width:100%;padding:13px;background:var(--gradient);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.9}
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.plat-btn{padding:10px;border:1.5px solid var(--g200);border-radius:var(--radius-sm);text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--g600);transition:all .2s}
+.plat-btn:hover,.plat-btn.selected{border-color:var(--teal);color:var(--teal);background:rgba(13,148,136,.05)}
+.plat-btn i{display:block;font-size:22px;margin-bottom:4px}
+
+/* Mobile overlay */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--g200);z-index:100;padding:6px 0 env(safe-area-inset-bottom,6px)}
+.bottom-nav-inner{display:flex;justify-content:space-around}
+.bottom-nav .bnav{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10px;font-weight:600;color:var(--g400);padding:4px 8px;cursor:pointer;border:none;background:none}
+.bottom-nav .bnav.active{color:var(--teal)}
+.bottom-nav .bnav i{font-size:17px}
+@media(max-width:1024px){.stats-grid,.summary-strip{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.show{display:block}
+  .main{margin-left:0}.menu-toggle{display:flex}.content{padding:16px 14px 100px}.topbar{padding:0 14px}.bottom-nav{display:block}
+  .stats-grid,.summary-strip{grid-template-columns:1fr 1fr;gap:10px}.stat-card{padding:14px}.stat-value{font-size:20px}.score-number{font-size:40px}
+}
+@media(max-width:480px){.stats-grid,.summary-strip{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div>
+    <span class="sidebar-brand">GigShield</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><i class="fas fa-gauge-high"></i> Dashboard</div>
+    <div class="nav-item" data-tab="income" onclick="switchTab('income')"><i class="fas fa-chart-line"></i> Income Analytics</div>
+    <div class="nav-item" data-tab="savings" onclick="switchTab('savings')"><i class="fas fa-piggy-bank"></i> Smart Savings</div>
+    <div class="nav-item" data-tab="credit" onclick="switchTab('credit')"><i class="fas fa-star"></i> Gig Credit Score</div>
+    <div class="nav-item" data-tab="coach" onclick="switchTab('coach')"><i class="fas fa-robot"></i> AI Coach</div>
+    <div class="nav-section">Account</div>
+    <div class="nav-item" onclick="switchTab('login')"><i class="fas fa-right-from-bracket"></i> Logout</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-badge">
+      <div class="user-avatar">RK</div>
+      <div><div class="user-name">Rajesh Kumar</div><div class="user-role">Swiggy Delivery Partner</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<div class="main" id="mainContent">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <span class="page-title" id="pageTitle">Dashboard</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;color:var(--g500)"><i class="fas fa-circle" style="color:var(--green);font-size:8px"></i> Live</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ============ DASHBOARD TAB ============ -->
+    <div class="tab-section active" id="tab-dashboard">
+      <div class="tip-banner">
+        <div class="tip-icon"><i class="fas fa-lightbulb"></i></div>
+        <div><h4>💡 Tip of the Day</h4><p>Setting aside just ₹50/day can build a ₹18,000 emergency fund in a year. Small steps, big impact!</p></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-wallet"></i></div><div class="stat-label">This Month's Income</div><div class="stat-value">₹18,450</div><div class="stat-change up"><i class="fas fa-arrow-up"></i> 12% vs last month</div></div>
+        <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-piggy-bank"></i></div><div class="stat-label">Total Savings</div><div class="stat-value">₹12,340</div><div class="stat-change up"><i class="fas fa-arrow-up"></i> ₹1,200 this month</div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fas fa-star"></i></div><div class="stat-label">Credit Score</div><div class="stat-value" style="color:var(--green)">724</div><div class="stat-change up"><i class="fas fa-arrow-up"></i> +18 points</div></div>
+        <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-bell"></i></div><div class="stat-label">Active Alerts</div><div class="stat-value">1</div><div class="stat-change down"><i class="fas fa-exclamation"></i> Spending high</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><span class="card-title">Income Trend (6 Months)</span><span class="card-badge">Predicted</span></div><div class="chart-box"><canvas id="dashIncomeChart"></canvas></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Expense Breakdown</span></div><div class="chart-box"><canvas id="dashExpenseChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recent Transactions</span></div>
+        <ul class="txn-list">
+          <li class="txn-item"><div class="txn-icon inc"><i class="fas fa-arrow-down"></i></div><div class="txn-info"><div class="txn-name">Swiggy Earnings</div><div class="txn-date">Sep 2, 2026</div></div><span class="txn-amount pos">+₹780</span></li>
+          <li class="txn-item"><div class="txn-icon exp"><i class="fas fa-arrow-up"></i></div><div class="txn-info"><div class="txn-name">Petrol</div><div class="txn-date">Sep 2, 2026</div></div><span class="txn-amount neg">-₹350</span></li>
+          <li class="txn-item"><div class="txn-icon inc"><i class="fas fa-arrow-down"></i></div><div class="txn-info"><div class="txn-name">Swiggy Earnings</div><div class="txn-date">Sep 1, 2026</div></div><span class="txn-amount pos">+₹920</span></li>
+          <li class="txn-item"><div class="txn-icon exp"><i class="fas fa-arrow-up"></i></div><div class="txn-info"><div class="txn-name">Mobile Recharge</div><div class="txn-date">Sep 1, 2026</div></div><span class="txn-amount neg">-₹299</span></li>
+          <li class="txn-item"><div class="txn-icon inc"><i class="fas fa-arrow-down"></i></div><div class="txn-info"><div class="txn-name">Weekend Bonus</div><div class="txn-date">Aug 31, 2026</div></div><span class="txn-amount pos">+₹500</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Savings Goal Progress</span><span class="card-badge">₹12,340 / ₹25,000</span></div>
+        <div class="sav-track"><div class="sav-fill" style="width:49%"></div></div>
+        <div class="sav-meta"><span>🎯 Emergency Fund</span><strong>49% complete</strong></div>
+      </div>
+    </div>
+
+    <!-- ============ INCOME TAB ============ -->
+    <div class="tab-section" id="tab-income">
+      <div class="summary-strip">
+        <div class="summary-card"><div class="sc-icon" style="background:rgba(13,148,136,.1);color:var(--teal)"><i class="fas fa-coins"></i></div><div class="sc-val">₹18,450</div><div class="sc-label">This Month</div></div>
+        <div class="summary-card"><div class="sc-icon" style="background:rgba(14,165,233,.1);color:var(--blue)"><i class="fas fa-chart-simple"></i></div><div class="sc-val">₹16,200</div><div class="sc-label">Monthly Average</div></div>
+        <div class="summary-card"><div class="sc-icon" style="background:rgba(16,185,129,.1);color:var(--green)"><i class="fas fa-arrow-trend-up"></i></div><div class="sc-val">₹19,800</div><div class="sc-label">Predicted Next Month</div></div>
+        <div class="summary-card"><div class="sc-icon" style="background:rgba(139,92,246,.1);color:var(--purple)"><i class="fas fa-calendar-check"></i></div><div class="sc-val">₹720</div><div class="sc-label">Best Daily Average</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><span class="card-title">Monthly Income (12 Months)</span></div><div class="chart-box"><canvas id="incMonthlyChart"></canvas></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Income by Source</span></div><div class="chart-box"><canvas id="incSourceChart"></canvas></div></div>
+      </div>
+      <div class="card"><div class="card-header"><span class="card-title">Predicted vs Actual Income</span><span class="card-badge">AI Powered</span></div><div class="chart-box"><canvas id="incPredChart"></canvas></div></div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Best Earning Days</span></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center">
+          <div style="padding:12px;background:var(--g50);border-radius:8px"><div style="font-size:11px;color:var(--g400)">Mon</div><div style="font-size:16px;font-weight:700;margin-top:4px">₹620</div></div>
+          <div style="padding:12px;background:var(--g50);border-radius:8px"><div style="font-size:11px;color:var(--g400)">Tue</div><div style="font-size:16px;font-weight:700;margin-top:4px">₹580</div></div>
+          <div style="padding:12px;background:var(--g50);border-radius:8px"><div style="font-size:11px;color:var(--g400)">Wed</div><div style="font-size:16px;font-weight:700;margin-top:4px">₹610</div></div>
+          <div style="padding:12px;background:var(--g50);border-radius:8px"><div style="font-size:11px;color:var(--g400)">Thu</div><div style="font-size:16px;font-weight:700;margin-top:4px">₹640</div></div>
+          <div style="padding:12px;background:var(--g50);border-radius:8px"><div style="font-size:11px;color:var(--g400)">Fri</div><div style="font-size:16px;font-weight:700;margin-top:4px;color:var(--teal)">₹750</div></div>
+          <div style="padding:12px;background:rgba(13,148,136,.08);border-radius:8px;border:1.5px solid var(--teal)"><div style="font-size:11px;color:var(--teal);font-weight:600">Sat</div><div style="font-size:16px;font-weight:700;margin-top:4px;color:var(--teal)">₹880</div></div>
+          <div style="padding:12px;background:rgba(13,148,136,.08);border-radius:8px;border:1.5px solid var(--teal)"><div style="font-size:11px;color:var(--teal);font-weight:600">Sun</div><div style="font-size:16px;font-weight:700;margin-top:4px;color:var(--teal)">₹920</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SAVINGS TAB ============ -->
+    <div class="tab-section" id="tab-savings">
+      <div class="auto-save-card">
+        <div><h3><i class="fas fa-wand-magic-sparkles"></i> Smart Auto-Savings</h3><p>AI automatically saves the right amount based on your income flow</p></div>
+        <label class="toggle"><input type="checkbox" checked><span></span></label>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-icon green"><i class="fas fa-piggy-bank"></i></div><div class="stat-label">Total Savings</div><div class="stat-value">₹12,340</div></div>
+        <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-robot"></i></div><div class="stat-label">AI Suggested Savings</div><div class="stat-value" style="color:var(--teal)">15%</div><div style="font-size:11px;color:var(--g500);margin-top:4px">₹2,770 / month</div></div>
+        <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-shield-halved"></i></div><div class="stat-label">Rainy Day Fund</div><div class="stat-value">₹8,500</div><div style="font-size:11px;color:var(--g500);margin-top:4px">Goal: ₹15,000</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Emergency Fund Goal</span><span class="card-badge">56% Complete</span></div>
+        <div class="sav-track"><div class="sav-fill" style="width:56%"></div></div>
+        <div class="sav-meta"><span>🎯 Target: ₹15,000</span><strong>₹8,500 saved</strong></div>
+        <p style="font-size:12px;color:var(--g500);margin-top:10px">At current rate, you'll reach your goal by <strong style="color:var(--teal)">November 2026</strong></p>
+      </div>
+      <div class="card"><div class="card-header"><span class="card-title">Monthly Savings Trend</span></div><div class="chart-box"><canvas id="savChart"></canvas></div></div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">💡 Tips to Save More</span></div>
+        <div class="insight-card"><i class="fas fa-utensils"></i><p><strong>Meal prep on Sundays</strong> — Pack lunch instead of ordering. Save ₹150-200/week.</p></div>
+        <div class="insight-card"><i class="fas fa-gas-pump"></i><p><strong>Fuel up on Tuesdays</strong> — Many petrol pumps have loyalty offers mid-week. Save ₹50-100/week.</p></div>
+        <div class="insight-card"><i class="fas fa-mobile-screen"></i><p><strong>Annual recharge plans</strong> — Switch from monthly to annual. Save ₹800-1200/year.</p></div>
+      </div>
+    </div>
+
+    <!-- ============ CREDIT SCORE TAB ============ -->
+    <div class="tab-section" id="tab-credit">
+      <div class="grid-2">
+        <div class="card" style="text-align:center;padding:28px">
+          <div class="card-header" style="justify-content:center"><span class="card-title">Your Gig Credit Score</span></div>
+          <div class="gauge-wrap">
+            <div class="gauge-bg"></div>
+            <div class="gauge-needle" id="gaugeNeedle" style="transform:translateX(-50%) rotate(-90deg)"></div>
+            <div class="gauge-center"></div>
+          </div>
+          <div class="gauge-labels"><span>300</span><span>500</span><span>700</span><span>900</span></div>
+          <div class="score-number" id="scoreDisplay" style="color:var(--green)">724</div>
+          <div class="score-label" style="color:var(--green)">Good</div>
+          <div class="stat-change up" style="margin-top:8px"><i class="fas fa-arrow-up"></i> +18 from last month</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Score Factors</span></div>
+          <div class="factor-item"><div class="factor-icon" style="background:rgba(13,148,136,.1);color:var(--teal)"><i class="fas fa-chart-bar"></i></div><div class="factor-info"><div class="factor-name">Income Consistency (25%)</div><div class="factor-bar"><div class="factor-bar-fill" style="width:78%;background:var(--teal)"></div></div></div><div class="factor-score" style="color:var(--teal)">78%</div></div>
+          <div class="factor-item"><div class="factor-icon" style="background:rgba(16,185,129,.1);color:var(--green)"><i class="fas fa-piggy-bank"></i></div><div class="factor-info"><div class="factor-name">Savings Ratio (25%)</div><div class="factor-bar"><div class="factor-bar-fill" style="width:72%;background:var(--green)"></div></div></div><div class="factor-score" style="color:var(--green)">72%</div></div>
+          <div class="factor-item"><div class="factor-icon" style="background:rgba(14,165,233,.1);color:var(--blue)"><i class="fas fa-receipt"></i></div><div class="factor-info"><div class="factor-name">Expense Discipline (20%)</div><div class="factor-bar"><div class="factor-bar-fill" style="width:65%;background:var(--blue)"></div></div></div><div class="factor-score" style="color:var(--blue)">65%</div></div>
+          <div class="factor-item"><div class="factor-icon" style="background:rgba(139,92,246,.1);color:var(--purple)"><i class="fas fa-clock"></i></div><div class="factor-info"><div class="factor-name">Payment Regularity (20%)</div><div class="factor-bar"><div class="factor-bar-fill" style="width:82%;background:var(--purple)"></div></div></div><div class="factor-score" style="color:var(--purple)">82%</div></div>
+          <div class="factor-item"><div class="factor-icon" style="background:rgba(249,115,22,.1);color:var(--orange)"><i class="fas fa-calendar"></i></div><div class="factor-info"><div class="factor-name">Platform Tenure (10%)</div><div class="factor-bar"><div class="factor-bar-fill" style="width:90%;background:var(--orange)"></div></div></div><div class="factor-score" style="color:var(--orange)">90%</div></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🧪 What-If Simulator</span></div>
+          <div class="sim-group"><div class="sim-label"><span>Extra Monthly Savings</span><span class="sim-val" id="simSavVal">₹500</span></div><input type="range" min="0" max="3000" value="500" step="100" oninput="updateSim();" id="simSav"></div>
+          <div class="sim-group"><div class="sim-label"><span>Reduce Non-Essential Spending</span><span class="sim-val" id="simExpVal">₹200</span></div><input type="range" min="0" max="2000" value="200" step="100" oninput="updateSim();" id="simExp"></div>
+          <div class="sim-result"><div>Projected Score</div><div class="sim-preview" id="simScore">742</div><div class="sim-delta" id="simDelta">↑ +18 points</div></div>
+        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Score History</span></div><div class="chart-box"><canvas id="creditHistChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">💡 Tips to Improve Score</span></div>
+        <div class="insight-card"><i class="fas fa-check-circle" style="color:var(--green)"></i><p><strong>Save consistently</strong> — Even ₹100/day builds trust. Your savings ratio can jump 10+ points.</p></div>
+        <div class="insight-card"><i class="fas fa-check-circle" style="color:var(--green)"></i><p><strong>Work on weekends</strong> — Higher weekend earnings improve income consistency score.</p></div>
+        <div class="insight-card"><i class="fas fa-check-circle" style="color:var(--green)"></i><p><strong>Cut entertainment spending</strong> — Reducing ₹500/month non-essential spend = +15 score points.</p></div>
+      </div>
+    </div>
+
+    <!-- ============ AI COACH TAB ============ -->
+    <div class="tab-section" id="tab-coach">
+      <div class="grid-2">
+        <div class="card" style="grid-column:1/3">
+          <div class="card-header"><span class="card-title">📊 Weekly Summary</span><span class="card-badge">This Week</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:center">
+            <div style="padding:16px;background:rgba(16,185,129,.06);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--g500)">Earned</div><div style="font-size:24px;font-weight:800;color:var(--green);margin-top:4px">₹4,200</div><div style="font-size:11px;color:var(--green)">↑ 8% vs last week</div></div>
+            <div style="padding:16px;background:rgba(239,68,68,.06);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--g500)">Spent</div><div style="font-size:24px;font-weight:800;color:var(--red);margin-top:4px">₹2,800</div><div style="font-size:11px;color:var(--red)">↑ 5% vs last week</div></div>
+            <div style="padding:16px;background:rgba(13,148,136,.06);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--g500)">Saved</div><div style="font-size:24px;font-weight:800;color:var(--teal);margin-top:4px">₹400</div><div style="font-size:11px;color:var(--teal)">Auto-saved ✨</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🤖 AI Financial Coach</span></div>
+          <div class="chat-area">
+            <div class="chat-msg"><div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble bot">Good afternoon Rajesh! 🌅 You earned ₹780 yesterday from Swiggy — great hustle!</div></div>
+            <div class="chat-msg"><div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble bot">📊 <strong>Insight:</strong> Your food spending is 35% of income this month. Try meal prepping on Sundays to save ₹200/week!</div></div>
+            <div class="chat-msg"><div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble bot">🚨 <strong>Alert:</strong> Your spending this week is 15% higher than last week. Let's keep an eye on non-essential purchases.</div></div>
+            <div class="chat-msg"><div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble bot">🎉 <strong>Great news!</strong> Your credit score went up by 18 points this month! Keep saving consistently to cross 750!</div></div>
+            <div class="chat-msg"><div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble bot">💡 <strong>Weekend tip:</strong> Saturday & Sunday are your best earning days (₹880-920/day). Plan to maximize those shifts!</div></div>
+          </div>
+          <div class="quick-replies">
+            <button class="quick-btn" onclick="addCoachMsg('How to save more?','Try the 50-30-20 rule: 50% needs, 30% wants, 20% savings. For ₹18,000 income that\'s ₹3,600 savings!')">How to save more?</button>
+            <button class="quick-btn" onclick="addCoachMsg('My credit tips','Focus on consistency! Your income regularity (82%) is strong. Boost savings ratio from 72% to 80% for +25 score points.')">My credit tips</button>
+            <button class="quick-btn" onclick="addCoachMsg('Set a goal','Great idea! I recommend: Save ₹3,000/month for 5 months = ₹15,000 emergency fund. Shall I enable auto-save?')">Set a goal</button>
+            <button class="quick-btn" onclick="addCoachMsg('Earning tips','Your data shows Fri-Sun earn 40% more. Consider working 2 extra hours on those days for an extra ₹2,000/month!')">Earning tips</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🔥 Streaks & Goals</span></div>
+            <div class="insight-card"><i class="fas fa-fire" style="color:var(--orange)"></i><p><strong>5-day streak!</strong> You've stayed under budget for 5 days in a row! 🎉</p></div>
+            <div style="margin-top:14px">
+              <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px"><span>🎯 Save ₹10,000 by December</span><span style="color:var(--teal)">₹3,500</span></div>
+              <div class="goal-bar-track"><div class="goal-bar-fill" style="width:35%"></div></div>
+              <div style="font-size:11px;color:var(--g500);margin-top:4px">35% complete — ₹6,500 to go</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">💡 Personalized Tips</span></div>
+            <div class="insight-card"><i class="fas fa-utensils"></i><p><strong>Cook at home 3x/week</strong> — You spent ₹2,400 on food last month. Cooking saves ₹800+/month.</p></div>
+            <div class="insight-card"><i class="fas fa-clock"></i><p><strong>Peak hours = peak earnings</strong> — Work 11 AM-2 PM and 7-10 PM for 30% more per delivery.</p></div>
+            <div class="insight-card"><i class="fas fa-piggy-bank"></i><p><strong>Round-up savings</strong> — Round every earning to nearest ₹100, save the difference. Extra ₹500-800/month!</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LOGIN TAB ============ -->
+    <div class="tab-section" id="tab-login">
+      <div class="login-wrap" style="min-height:auto;background:none;padding:40px 0">
+        <div class="login-card" style="margin:0 auto">
+          <div style="text-align:center;margin-bottom:20px"><div class="sidebar-logo" style="margin:0 auto 10px;width:50px;height:50px;font-size:22px"><i class="fas fa-shield-halved"></i></div></div>
+          <h1>GigShield</h1>
+          <p class="sub">AI-Powered Financial Resilience</p>
+          <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+91 98765 43210"></div>
+          <label style="font-size:13px;font-weight:600;color:var(--g700);display:block;margin-bottom:8px">Select Your Platform</label>
+          <div class="platform-grid">
+            <div class="plat-btn selected" onclick="selPlat(this)"><i class="fas fa-motorcycle"></i>Swiggy</div>
+            <div class="plat-btn" onclick="selPlat(this)"><i class="fas fa-utensils"></i>Zomato</div>
+            <div class="plat-btn" onclick="selPlat(this)"><i class="fas fa-car"></i>Ola/Uber</div>
+            <div class="plat-btn" onclick="selPlat(this)"><i class="fas fa-truck-fast"></i>Rapido</div>
+            <div class="plat-btn" onclick="selPlat(this)"><i class="fas fa-laptop-code"></i>Freelance</div>
+            <div class="plat-btn" onclick="selPlat(this)"><i class="fas fa-hammer"></i>Daily Wage</div>
+          </div>
+          <div class="form-group"><label>City</label><select><option>Chennai</option><option>Mumbai</option><option>Bangalore</option><option>Delhi</option><option>Hyderabad</option><option>Pune</option><option>Kolkata</option></select></div>
+          <button class="btn" onclick="switchTab('dashboard')"><i class="fas fa-arrow-right"></i> Get Started</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Bottom Nav (Mobile) -->
+<div class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnav active" data-tab="dashboard" onclick="switchTab('dashboard')"><i class="fas fa-gauge-high"></i>Home</button>
+    <button class="bnav" data-tab="income" onclick="switchTab('income')"><i class="fas fa-chart-line"></i>Income</button>
+    <button class="bnav" data-tab="savings" onclick="switchTab('savings')"><i class="fas fa-piggy-bank"></i>Savings</button>
+    <button class="bnav" data-tab="credit" onclick="switchTab('credit')"><i class="fas fa-star"></i>Score</button>
+    <button class="bnav" data-tab="coach" onclick="switchTab('coach')"><i class="fas fa-robot"></i>Coach</button>
+  </div>
+</div>
+
+<script>
+// ===== CHART INSTANCES =====
+const charts = {};
+
+// ===== TAB SWITCHING =====
+function switchTab(tab) {
+  // Hide ALL tabs explicitly
+  document.querySelectorAll('.tab-section').forEach(el => {
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  // Show selected tab
+  const target = document.getElementById('tab-' + tab);
+  if (target) {
+    target.classList.add('active');
+    target.style.display = 'block';
+  }
+  // Update sidebar active
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const sideNav = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if (sideNav) sideNav.classList.add('active');
+  // Update bottom nav active
+  document.querySelectorAll('.bnav').forEach(el => el.classList.remove('active'));
+  const botNav = document.querySelector(`.bnav[data-tab="${tab}"]`);
+  if (botNav) botNav.classList.add('active');
+  // Update page title
+  const titles = {dashboard:'Dashboard',income:'Income Analytics',savings:'Smart Savings',credit:'Gig Credit Score',coach:'AI Financial Coach',login:'Login'};
+  document.getElementById('pageTitle').textContent = titles[tab] || 'GigShield';
+  // Show/hide sidebar & main for login
+  document.getElementById('sidebar').style.display = tab === 'login' ? 'none' : '';
+  document.getElementById('mainContent').style.marginLeft = tab === 'login' ? '0' : '';
+  // Scroll to top
+  window.scrollTo(0, 0);
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  // Init charts for this tab (delayed so canvas is visible)
+  setTimeout(() => initChartsForTab(tab), 100);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function selPlat(el) {
+  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== CHART INITIALIZATION =====
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function initChartsForTab(tab) {
+  if (tab === 'dashboard') initDashboardCharts();
+  if (tab === 'income') initIncomeCharts();
+  if (tab === 'savings') initSavingsCharts();
+  if (tab === 'credit') initCreditCharts();
+}
+
+function initDashboardCharts() {
+  // Income trend
+  destroyChart('dashIncomeChart');
+  const ctx1 = document.getElementById('dashIncomeChart');
+  if (ctx1) charts['dashIncomeChart'] = new Chart(ctx1, {type:'line',data:{labels:['Apr','May','Jun','Jul','Aug','Sep','Oct (Pred)'],datasets:[{label:'Income (₹)',data:[14200,15800,13500,16400,17100,18450,19800],borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,.1)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#0d9488',segment:{borderDash:ctx=>ctx.p1DataIndex>=5?[6,3]:undefined,borderColor:ctx=>ctx.p1DataIndex>=5?'#0ea5e9':undefined}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+  // Expense doughnut
+  destroyChart('dashExpenseChart');
+  const ctx2 = document.getElementById('dashExpenseChart');
+  if (ctx2) charts['dashExpenseChart'] = new Chart(ctx2, {type:'doughnut',data:{labels:['Food','Fuel','Rent','Recharge','Entertainment','Medical'],datasets:[{data:[3500,2800,5000,400,1200,600],backgroundColor:['#0d9488','#0ea5e9','#8b5cf6','#f97316','#ec4899','#eab308'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,padding:10,font:{size:11}}}}}});
+}
+
+function initIncomeCharts() {
+  // Monthly income
+  destroyChart('incMonthlyChart');
+  const c1 = document.getElementById('incMonthlyChart');
+  if(c1) charts['incMonthlyChart'] = new Chart(c1,{type:'bar',data:{labels:['Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Income (₹)',data:[12800,13200,11500,14100,13800,15200,14200,15800,13500,16400,17100,18450],backgroundColor:'rgba(13,148,136,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+  // Source pie
+  destroyChart('incSourceChart');
+  const c2 = document.getElementById('incSourceChart');
+  if(c2) charts['incSourceChart'] = new Chart(c2,{type:'pie',data:{labels:['Deliveries','Weekend Bonus','Peak Hour Tips','Referral Bonus'],datasets:[{data:[65,18,12,5],backgroundColor:['#0d9488','#0ea5e9','#8b5cf6','#f97316'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,padding:10,font:{size:11}}}}}});
+  // Predicted vs Actual
+  destroyChart('incPredChart');
+  const c3 = document.getElementById('incPredChart');
+  if(c3) charts['incPredChart'] = new Chart(c3,{type:'line',data:{labels:['Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Actual',data:[14200,15800,13500,16400,17100,18450],borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,.1)',fill:false,tension:.4,pointRadius:5},{label:'Predicted',data:[14800,15200,14000,15800,16800,18000],borderColor:'#0ea5e9',borderDash:[6,3],fill:false,tension:.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+}
+
+function initSavingsCharts() {
+  destroyChart('savChart');
+  const c = document.getElementById('savChart');
+  if(c) charts['savChart'] = new Chart(c,{type:'bar',data:{labels:['Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Savings (₹)',data:[1500,1800,1200,2100,2400,2340],backgroundColor:['rgba(13,148,136,.6)','rgba(13,148,136,.6)','rgba(239,68,68,.4)','rgba(13,148,136,.6)','rgba(13,148,136,.8)','rgba(13,148,136,.7)'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+}
+
+function initCreditCharts() {
+  // Score history
+  destroyChart('creditHistChart');
+  const c = document.getElementById('creditHistChart');
+  if(c) charts['creditHistChart'] = new Chart(c,{type:'line',data:{labels:['Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Credit Score',data:[650,668,675,692,706,724],borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,.1)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'#0d9488'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:600,max:800}}}});
+  // Animate gauge needle
+  const needle = document.getElementById('gaugeNeedle');
+  if(needle) {
+    const score = 724, pct = (score-300)/600;
+    const angle = -90 + (pct * 180);
+    setTimeout(() => { needle.style.transform = `translateX(-50%) rotate(${angle}deg)`; }, 200);
+  }
+}
+
+// ===== WHAT-IF SIMULATOR =====
+function updateSim() {
+  const sav = parseInt(document.getElementById('simSav').value);
+  const exp = parseInt(document.getElementById('simExp').value);
+  document.getElementById('simSavVal').textContent = '₹' + sav.toLocaleString('en-IN');
+  document.getElementById('simExpVal').textContent = '₹' + exp.toLocaleString('en-IN');
+  const base = 724;
+  const bonus = Math.round(sav/100*3 + exp/100*2.5);
+  const newScore = Math.min(900, base + bonus);
+  document.getElementById('simScore').textContent = newScore;
+  document.getElementById('simDelta').textContent = '↑ +' + bonus + ' points';
+}
+
+// ===== COACH CHAT =====
+function addCoachMsg(q, a) {
+  const area = document.querySelector('.chat-area');
+  // User msg
+  const uDiv = document.createElement('div');
+  uDiv.className = 'chat-msg';
+  uDiv.style.justifyContent = 'flex-end';
+  uDiv.innerHTML = `<div class="chat-bubble" style="background:var(--gradient);color:#fff;text-align:right">${q}</div>`;
+  area.appendChild(uDiv);
+  // Bot reply after delay
+  setTimeout(() => {
+    const bDiv = document.createElement('div');
+    bDiv.className = 'chat-msg';
+    bDiv.innerHTML = `<div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble bot">${a}</div>`;
+    area.appendChild(bDiv);
+    area.scrollTop = area.scrollHeight;
+  }, 500);
+  area.scrollTop = area.scrollHeight;
+}
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  switchTab('dashboard');
+});
+</script>
+</body>
+</html>
